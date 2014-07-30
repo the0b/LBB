@@ -65,7 +65,7 @@ void loop()
       
       currOunces = translateToOz(currReading);
       //Serial.print("CURRENT ounces: ");
-      //Serial.println(currOunces);
+      Serial.println(currOunces);
       //calculate the difference:
       //difference = lastOunces - currOunces;
       //Serial.print("DIFFERENCE :");
