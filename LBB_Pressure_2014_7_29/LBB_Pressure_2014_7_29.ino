@@ -23,6 +23,7 @@ uint32_t lastWaterWeight;
 uint32_t currReading;
 uint16_t currOunces;
 uint16_t lastOunces;
+long delayLight = 0; //this will be set by iOS to 1 if the user drank water
 //uint32_t difference = 0;
 
 
@@ -31,9 +32,10 @@ unsigned long time;
 boolean pickup=false;
 boolean ledON = false;
 
-const uint32_t ZERO = 39000;
-const int TIMER = 60; //in seconds. need to convert to ms
-long TIME_MS = timeInMs(TIMER);
+const uint32_t ZERO = 41000;
+//const int TIMER = 60; //in seconds. need to convert to ms
+uint32_t TIME_MS = 60000;
+
 
 void setup()
 {
@@ -65,7 +67,7 @@ void loop()
       
       currOunces = translateToOz(currReading);
       //Serial.print("CURRENT ounces: ");
-      Serial.println(currOunces);
+      //Serial.println(currOunces);
       //calculate the difference:
       //difference = lastOunces - currOunces;
       //Serial.print("DIFFERENCE :");
@@ -74,8 +76,15 @@ void loop()
       
       //communicate to ios
       Bean.setScratchNumber(1,(long)currOunces);
-
-      time = millis();  //"reset" time benchmark
+      
+      Bean.sleep(1000);
+      delayLight = Bean.readScratchNumber(2);
+      
+      if(delayLight >0)
+      {
+        time = millis();  //"reset" time benchmark
+        //Serial.println("delayed");
+      }
       
       lastOunces = currOunces; 
       
@@ -91,8 +100,10 @@ void loop()
   {
      if(currReading > ZERO)
     {
+    
       if(!ledON){ 
        timeDiff = millis() - time;
+       //Serial.println(timeDiff);
 
        if(timeDiff > TIME_MS)
        {
@@ -102,16 +113,18 @@ void loop()
          ledON = true;
        }
       }
+    
        
     }
     else
     {
       pickup = true;  //set pickup to true because weight approximates zero
-      Serial.println("picked up.");
+      //Serial.println("picked up.");
     }
   }
  
   //delay(100);
+  delayLight = 0;//reset the delayLight bool
   Bean.sleep(2500);
 }
 
@@ -122,7 +135,8 @@ uint16_t translateToOz(uint32_t value)
 {
 
   uint16_t a_value = value/100;
-  uint16_t r_value; 
+  Bean.sleep(20);
+  uint16_t r_value = 30; 
   if(a_value > 1000)
    {
      r_value = 20;
@@ -148,19 +162,18 @@ uint16_t translateToOz(uint32_t value)
     r_value = 4;
      return r_value;
   }
-  else if(a_value >450 && a_value <=600)
+  else if(a_value >410 && a_value <=600)
   {
     r_value = 0;
+    return r_value;
+  }
+  else{
+    //Serial.println("WTF");
     return r_value;
   }
 }
 
 
-//translate Timer to ms
-long timeInMs(int value)
-{
-  return value * 1000;
-}
 
 uint32_t getPressureReading()
 {
